@@ -1,4 +1,5 @@
-from flask import request  
+from flask import request 
+import sqlite3
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
@@ -7,7 +8,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import select
 from selenium.webdriver.support.select import Select
 import time
-from database import *
 from flask import Flask, render_template
 app = Flask(__name__, template_folder='template')
 drivers = []
@@ -121,6 +121,83 @@ def formsubmission(username,ObjectApi):
     driver.execute_script("window.close()")
     return render_template('index-1.html',name=username)
 
+def createTable():
+    conn = sqlite3.connect('database.db')
+    c= conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS users(name text, username text primary key, password text,email text not null unique, Slogin text, spassword text, sorgurl text, driverindex integer)''')
+    print('table has created')
+    conn.commit()
+    conn.close()
+createTable()
 
+def insertRe(name, username, password,email):
+    try:
+        conn = sqlite3.connect('database.db')
+        c= conn.cursor()
+        string = 'insert into users values('+"'"+name+"', '"+username+"' ,  '"+password+"', "+"'"+email+"','','','','')"
+        print(string)
+        c.execute(string)
+        conn.commit()
+        print('record Inserted')
+        conn.close()
+        return True
+    except:
+        return False
+    
+def verifylogin(username, password):
+    try:
+        conn = sqlite3.connect('database.db')
+        query= 'SELECT password from users where username='+"'"+username+"'"
+        print(query)
+        c = conn.cursor()
+        x = c.execute(query).fetchone()[0]
+        print(x)
+        conn.close()
+        if x == password:
+            return True
+        else :
+            return False
+    except:
+        return False
+
+def updateSinfo(username,slogin, spassword, sorgurl, driverIndex):
+    try:
+        conn = sqlite3.connect('database.db')
+        query = 'Update users set slogin ='+"'" +slogin+"', spassword='"+spassword+"', sorgurl='"+sorgurl+"',  driverindex='"+str(driverIndex)+"' where username = '"+username+"'"
+        print(query)
+        c = conn.cursor()
+        c.execute(query)
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e: 
+        print(e)
+        return False
+def fetchDriverindex(username):
+    try:
+        conn = sqlite3.connect('database.db')
+        query='SELECT driverindex from users where username = '+"'"+username+"'"
+        print(query)
+        c = conn.cursor()
+        x = c.execute(query).fetchone()[0]
+        conn.close()
+        print(x)
+        return x
+    except:
+        return None
+    
+def updateDriverIndex(username, driverindex):
+    try:
+        conn = sqlite3.connect('database.db')
+        query='update users set driverindex='+str(driverindex)+' where username='+"'"+username+"'"
+        print(query)
+        c = conn.cursor()
+        c.execute(query)
+        conn.commit()
+        conn.close()
+        return True
+    except:
+        return False
+    
 if __name__ == '__main__':
     app.run(debug=True)
